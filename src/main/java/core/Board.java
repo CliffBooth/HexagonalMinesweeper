@@ -8,6 +8,7 @@ public class Board {
     private final int XTiles;
     private final int YTiles;
     private final int bombs;
+    private int flags;
 
     private final Hex[][] grid;
     private boolean lose;
@@ -19,6 +20,7 @@ public class Board {
         this.XTiles = x;
         this.YTiles = y;
         this.bombs = bombs;
+        flags = bombs;
         grid = new Hex[XTiles][YTiles];
         for (int i = 0; i < XTiles; i++) {
             for (int j = 0; j < YTiles; j++) {
@@ -76,6 +78,8 @@ public class Board {
     public void open(Hex hex) {
         if (hex.isOpened())
             return;
+        if (hex.isFlagged())
+            flags++;
         if (isItFirstTurn) {
             plantBombs(hex);
         }
@@ -108,7 +112,7 @@ public class Board {
             Random random = new Random();
             int n = random.nextInt(notBombs.size());
             Hex h = notBombs.get(n);
-            grid[h.getX()][h.getY()].makeBomb();
+            h.makeBomb();
             notBombs.remove(h);
         }
 
@@ -142,6 +146,20 @@ public class Board {
         victory = true;
     }
 
+    public void flag(Hex hex) {
+        if (!hex.isFlagged() && flags != 0) {
+            hex.flag();
+            flags--;
+        } else if (hex.isFlagged()) {
+            hex.flag();
+            flags++;
+        }
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
     public boolean getLose() {
         return lose;
     }
@@ -152,10 +170,6 @@ public class Board {
 
     public Hex[][] getGrid() {
         return grid;
-    }
-
-    public boolean isItFirstTurn() {
-        return isItFirstTurn;
     }
 
 }

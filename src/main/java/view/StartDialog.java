@@ -1,4 +1,4 @@
-package javafx;
+package view;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-class StartDialog extends Dialog<ButtonType> {
+public class StartDialog extends Dialog<ButtonType> {
     int size = 7;
     int bombs = 7;
 

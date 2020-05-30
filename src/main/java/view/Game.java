@@ -1,4 +1,4 @@
-package javafx;
+package view;
 
 import core.Board;
 import core.Hex;
@@ -32,7 +32,7 @@ public class Game extends Application {
     private Board board;
     private boolean gameOver = false;
 
-    private Double[] coords = new Double[]{  //coordinates of a single hexagon
+    private final Double[] coords = new Double[]{  //coordinates of a single hexagon
             W * 0.25, 0.0,
             W * 0.75, 0.0,
             W, H * 0.5,
@@ -42,8 +42,9 @@ public class Game extends Application {
     };
 
     private Text status;
-    private int flags;
     private Text flagsText;
+    private final String loseMessage = "YOU LOSE!";
+    private final String winMessage = "YOU WIN!";
 
     private List<HexView> allCells;
 
@@ -78,8 +79,7 @@ public class Game extends Application {
         Button restart = new Button("restart");
         status = new Text("");
         status.setFont(Font.font("", FontWeight.BOLD, 20));
-        flags = bombs;
-        flagsText = new Text(Integer.toString(flags));
+        flagsText = new Text(Integer.toString(board.getFlags()));
         flagsText.setFont(new Font(20));
         hbox.getChildren().addAll(restart, flagsText, status);
         restart.setOnAction(e -> {
@@ -125,90 +125,70 @@ public class Game extends Application {
         return root;
     }
 
-    public void restart() {
+    private void restart() {
         Stage stage = new Stage();
         start(stage);
     }
 
 
-    class HexView extends StackPane {
-        Hex hex;
-        Polygon border;
-        Polygon lit;
-        Text text = new Text();
+    private class HexView extends StackPane {
+        private final Hex hex;
+        private final Polygon border = new Polygon();
+        private final Text text = new Text();
 
         HexView(Hex hex, double dx, double dy) {
             this.hex = hex;
+            text.setFont(new Font(H / 2));
 
             allCells.add(this);
-            border = new Polygon();
 
             border.getPoints().addAll(coords);
             border.setStroke(Color.BLACK);
-            border.setStrokeWidth(2);
+            border.setStrokeWidth(3);
+            border.setFill(Color.GREEN);
 
-            lit = new Polygon();
-            lit.getPoints().addAll(border.getPoints());
-            lit.setFill(Color.GREEN);
-            lit.setStroke(Color.BLACK);
-            lit.setStrokeWidth(3);
-
-            getChildren().addAll(border, text, lit);
+            getChildren().addAll(border, text);
             setTranslateX(dx);
             setTranslateY(dy);
 
-            lit.setOnMouseClicked(e -> {
+            border.setOnMouseClicked(e -> {
                 if (gameOver)
                     return;
                 if (e.getButton() == MouseButton.PRIMARY) {
-                    if (board.isItFirstTurn()) {
-                        board.open(hex);
-                        for (HexView cell : allCells) {
-                            if (cell.hex.isBomb()) {
-                                cell.border.setFill(Color.RED);
-                                cell.text.setVisible(false);
-                            } else {
-                                cell.text.setVisible(true);
-                                cell.border.setFill(null);
-                            }
-                            String text = cell.hex.getBombs() == 0 ? "" : Integer.toString(cell.hex.getBombs());
-                            cell.text.setText(text);
-                            cell.text.setFont(new Font(H / 2));
-                        }
-                    }
                     board.open(hex);
                     if (board.getLose()) {
                         gameOver = true;
-                        status.setText("YOU LOSE!");
+                        status.setText(loseMessage);
                         status.setFill(Color.RED);
                     }
                     if (board.getVictory()) {
                         gameOver = true;
-                        status.setText("YOU WIN!");
+                        status.setText(winMessage);
                         status.setFill(Color.GREEN);
                     }
-                    update();
                 } else {
-                    if (!hex.isFlagged() && flags != 0) {
-                        hex.flag();
-                        flags--;
-                        lit.setFill(Color.YELLOW);
-                    } else if (hex.isFlagged()) {
-                        hex.flag();
-                        flags++;
-                        lit.setFill(Color.GREEN);
-                    }
-                    flagsText.setText(Integer.toString(flags));
+                    board.flag(hex);
                 }
+                update();
             });
         }
 
-        public void update() {
+        private void update() {
+            flagsText.setText(Integer.toString(board.getFlags()));
             for (HexView cell : allCells) {
-                if (cell.hex.isOpened() & cell.getChildren().size() == 3)
-                    cell.getChildren().remove(2);
+                if (cell.hex.isFlagged())
+                    cell.border.setFill(Color.YELLOW);
+                else
+                    cell.border.setFill(Color.GREEN);
+                if (cell.hex.isOpened() && cell.hex.isBomb())
+                    cell.border.setFill(Color.RED);
+                else if (cell.hex.isOpened()) {
+                    cell.border.setStrokeWidth(2);
+                    String text = cell.hex.getBombs() == 0 ? "" : Integer.toString(cell.hex.getBombs());
+                    cell.text.setText(text);
+                    cell.border.setFill(null);
+                }
             }
         }
-
     }
 }

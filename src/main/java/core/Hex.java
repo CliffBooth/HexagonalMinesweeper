@@ -4,7 +4,7 @@ public class Hex {
     private final int x;
     private final int y;
     private boolean isBomb = false;
-    boolean opened = false;
+    private boolean opened = false;
     private boolean flagged = false;
     private int bombs; //number of bombs around this hex
 
